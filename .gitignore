@@ -1,0 +1,10 @@
+gi_*
+lem_bin
+*.gz
+*.txt
+*.png
+*.tif
+*.gpl
+*.swp
+*.o
+
