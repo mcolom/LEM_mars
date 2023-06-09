@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
+#include <cstdio>
 
 
 //! Local includes
@@ -44,6 +45,7 @@ Parameters::Parameters(
   m_oceanLevel   (0.f),        // Ocean level                        -lo [%f]
   m_percLand     (15.f * 1e-2),// Percentage of landscape to remove  -p  [%f]
   m_initWaterLvl (0.f  * 1e-3),// Initial water level                -lw [%f]
+  m_mars_a       (1.f),        // Mars "a" contant                   -ca [%f]
 #ifdef _OPENMP
   m_nbThreads    (4),          // Number of threads to use           -d  [%d]
 #else
@@ -107,6 +109,7 @@ Parameters::Parameters(
   m_oceanLevel   (i_params.oceanLevel()),
   m_percLand     (i_params.percLand()),
   m_initWaterLvl (i_params.initWaterLvl()),
+  m_mars_a       (i_params.mars_a()),
   m_nbThreads    (i_params.nbThreads()),
   m_useMultiScale(i_params.useMultiScale()),
   m_boostWater   (i_params.boostWater()),
@@ -293,6 +296,14 @@ int Parameters::checkArgs(
     if (sarg == "-lw") {
       if (n + 1 < i_argc) {
         m_initWaterLvl = atof(i_argv[++n]) * 1e-3;
+      }
+    }
+
+    //! Mars "a" constant
+    if (sarg == "-ca") {
+      if (n + 1 < i_argc) {
+        m_mars_a = atof(i_argv[++n]);
+        printf("Using constant a =  %f\n", m_mars_a);
       }
     }
 
@@ -980,10 +991,15 @@ void Parameters::print() const {
   oss12 << m_initWaterLvl;
   this->printWord(" - Init water level:", oss12.str(), s4);
 
-  //! Number of threads
+  //! Mars "a" constant
   ostringstream oss13;
-  oss13 << m_nbThreads;
-  this->printWord(" - NbThreads:", oss13.str(), s4);
+  oss13 << m_mars_a;
+  this->printWord(" - Mars a constant:", oss13.str(), s4);
+
+  //! Number of threads
+  ostringstream oss15;
+  oss15 << m_nbThreads;
+  this->printWord(" - NbThreads:", oss15.str(), s4);
 }
 
 

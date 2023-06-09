@@ -59,6 +59,7 @@ class Parameters {
     float  oceanLevel   () const {return m_oceanLevel   ;}
     float  percLand     () const {return m_percLand     ;}
     float  initWaterLvl () const {return m_initWaterLvl ;}
+    float  mars_a       () const {return m_mars_a       ;}
     int    nbThreads    () const {return m_nbThreads    ;}
     bool   useMultiScale() const {return m_useMultiScale;}
     float  boostWater   () const {return m_boostWater   ;}
@@ -194,6 +195,7 @@ class Parameters {
     float  m_oceanLevel;    // Ocean level                        -lo [%f]
     float  m_percLand;      // Percentage of landscape to remove  -p  [%f]
     float  m_initWaterLvl;  // Initial water level                -lw [%f]
+    float  m_mars_a;        // Mars a constant                    -ca [%f]
     int    m_nbThreads;     // Number of threads to use           -d  [%d]
     bool   m_useMultiScale; // Activate the multiscale water init -wm
     float  m_boostWater;    // Activate the boost for water init  -bw [%s]
