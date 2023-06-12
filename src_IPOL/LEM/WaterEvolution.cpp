@@ -100,6 +100,7 @@ void WaterEvolution::init(
   m_rain     = p_params.rain();
   m_rainMatrix     = p_params.rainMatrix();
   m_oceanLvl = p_params.oceanLevel();
+  m_mars_a = p_params.mars_a();
 
   //! Sizes
   m_height = p_height;
@@ -123,6 +124,7 @@ void WaterEvolution::performOneStepEvolution(
   const size_t hBegin  = i_imLandscape.nHeight(p_tid);
   const size_t hEnd    = i_imLandscape.nHeight(p_tid + 1);
   const float oceanLvl = m_oceanLvl;
+  const float mars_a     = m_mars_a;
 
 #if defined(__AVX__)
   //! AVX version
@@ -131,6 +133,7 @@ void WaterEvolution::performOneStepEvolution(
   const __m256 zWeight   = _mm256_set1_ps(1.f / sqrt(2.));
   const __m256 z0        = _mm256_setzero_ps();
   const __m256 zOceanLvl = _mm256_set1_ps(oceanLvl);
+  const __m256 zMars_a = _mm256_set1_ps(mars_a);
 #endif
 #if defined(__SSE__)
   //! SSE version
@@ -139,6 +142,7 @@ void WaterEvolution::performOneStepEvolution(
   const __m128 xWeight   = _mm_set1_ps(1.f / sqrt(2.));
   const __m128 x0        = _mm_setzero_ps();
   const __m128 xOceanLvl = _mm_set1_ps(oceanLvl);
+  const __m128 xMars_a   = _mm_set1_ps(mars_a);
 #endif
   const float weight   = 1.f / sqrt(2.f);
 
@@ -236,6 +240,7 @@ void WaterEvolution::performOneStepEvolution(
       const float steepBR = iWB[j + 1] + iLB[j + 1] - wc - lc;
 
       //! Update the transfer
+      // This is tau_rho in the pseudocode
       oT[j] = timeStep * ((steepL  > 0 ? iWC[j - 1] : wc) * steepL  +
                           (steepR  > 0 ? iWC[j + 1] : wc) * steepR  +
                           (steepT  > 0 ? iWT[j    ] : wc) * steepT  +
@@ -260,13 +265,20 @@ void WaterEvolution::performOneStepEvolution(
     const float* iR = (float*)&rainMatrix[i*m_width];
     size_t j = 0;
 
+// With AVX and SSE we store in [oW + j] the result of applying a mask according to the max operator.
 #if defined(__AVX__)
     //! AVX version
     for (; j < m_width - 8; j+=8) {
 
       //! We don't want to have negative water
+      // _mm256_storeu_ps(.);
+      // _mm256_storeu_ps(oW + j, applyMask256_ps(.));
+      // Argument of applyMask256_ps:
+      //    _mm256_cmp_ps(_mm256_loadu_ps(iL + j), zOceanLvl), --> Comparison
+      //    zOceanLvl - _mm256_loadu_ps(iL + j), --> when h < theta
+      //    _mm256_max_ps(_mm256_loadu_ps(oW + j) + _mm256_loadu_ps(iT + j) + zRain * _mm256_loadu_ps(iR + j) * zTimeStep, z0) --> when h >= theta
       _mm256_storeu_ps(oW + j, applyMask256_ps(_mm256_cmp_ps(_mm256_loadu_ps(iL + j), zOceanLvl, _CMP_LT_OS), zOceanLvl - _mm256_loadu_ps(iL + j),
-        _mm256_max_ps(_mm256_loadu_ps(oW + j) + _mm256_loadu_ps(iT + j) + zRain * _mm256_loadu_ps(iR + j) * zTimeStep, z0)));
+        _mm256_max_ps(_mm256_loadu_ps(oW + j) + zMars_a * _mm256_loadu_ps(iT + j) + zRain * _mm256_loadu_ps(iR + j) * zTimeStep, z0)));
     }
 #endif
 #if defined(__SSE__)
@@ -274,7 +286,7 @@ void WaterEvolution::performOneStepEvolution(
     for (; j < m_width - 4; j+=4) {
       //! We don't want to have negative water
       _mm_storeu_ps(oW + j, applyMask_ps(_mm_cmplt_ps(_mm_loadu_ps(iL + j), xOceanLvl), xOceanLvl - _mm_loadu_ps(iL + j),
-        _mm_max_ps(_mm_loadu_ps(oW + j) + _mm_loadu_ps(iT + j) + xRain * _mm_loadu_ps(iR + j) * xTimeStep, x0)));
+        _mm_max_ps(_mm_loadu_ps(oW + j) + xMars_a * _mm_loadu_ps(iT + j) + xRain * _mm_loadu_ps(iR + j) * xTimeStep, x0)));
     }
 #endif
     //! Normal version
@@ -286,7 +298,10 @@ void WaterEvolution::performOneStepEvolution(
         oW[j] = oceanLvl - iL[j];
       }
       else {
-        oW[j] = std::max(oW[j] + iT[j] + timeStep * rain * iR[j], 0.f);
+        // oW: output water
+        // iT: temp image. It's tau_rho in the pseudocode
+        // iR: rain matrix
+        oW[j] = std::max(oW[j] + m_mars_a * iT[j] + timeStep * rain * iR[j], 0.f);
       }
     }
   }
