@@ -89,7 +89,7 @@ class WaterEvolution {
     float m_rain;
     float* m_rainMatrix;
     float m_oceanLvl;
-    float m_mars_a;
+    float m_alpha;
 
     //! Size
     size_t m_width;
