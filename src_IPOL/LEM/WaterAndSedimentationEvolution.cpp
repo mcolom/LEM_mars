@@ -103,7 +103,8 @@ void WaterAndSedimentationEvolution::init(
   m_dt     = m_params->timeStep();
   m_rain   = m_params->rain();
   m_rainMatrix   = m_params->rainMatrix();
-
+  m_alpha  = p_params.alpha();
+  
   //! Sizes
   m_height = p_height;
   m_width  = p_width;
@@ -129,7 +130,8 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
   const size_t hEnd    = i_imLandscape.nHeight(p_tid + 1);
   const float weight   = 1.f / sqrt(2.);
   const float oceanLvl = m_params->oceanLevel();
-
+  const float alpha     = m_alpha;
+  
 #if defined(__AVX__)
   //! AVX version
   const __m256 zTimeStep = _mm256_set1_ps(timeStep);
@@ -137,6 +139,8 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
   const __m256 zOceanLvl = _mm256_set1_ps(oceanLvl);
   const __m256 zWeight   = _mm256_set1_ps(weight);
   const __m256 z0        = _mm256_setzero_ps();
+  const __m256 zalpha = _mm256_set1_ps(alpha);
+  
 #endif
 #if defined(__SSE__)
   //! SSE version
@@ -145,6 +149,8 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
   const __m128 xOceanLvl = _mm_set1_ps(oceanLvl);
   const __m128 xWeight   = _mm_set1_ps(weight);
   const __m128 x0        = _mm_setzero_ps();
+  const __m128 xalpha   = _mm_set1_ps(alpha);
+  
 #endif
 
 
@@ -313,11 +319,11 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
 
       //! We don't want to have negative water
       _mm256_storeu_ps(oW + j, applyMask256_ps(_mm256_cmp_ps(_mm256_loadu_ps(iL + j), zOceanLvl, _CMP_LT_OS), zOceanLvl - _mm256_loadu_ps(iL + j),
-        _mm256_max_ps(_mm256_loadu_ps(oW + j) + _mm256_loadu_ps(iTw + j) + zRain * _mm256_loadu_ps(iR + j) * zTimeStep, z0)));
+        _mm256_max_ps(_mm256_loadu_ps(oW + j) + zalpha * _mm256_loadu_ps(iTw + j) + zRain * _mm256_loadu_ps(iR + j) * zTimeStep, z0)));
 
       //! We don't want to have negative sedimentation AND
       //! We don't want to have more sedimentation than landscape
-      _mm256_storeu_ps(oC + j, _mm256_max_ps(_mm256_loadu_ps(oC + j) + _mm256_loadu_ps(iTc + j), z0));
+      _mm256_storeu_ps(oC + j, _mm256_max_ps(_mm256_loadu_ps(oC + j) + zalpha * _mm256_loadu_ps(iTc + j), z0));
     }
 #endif
 #if defined(__SSE__)
@@ -326,11 +332,11 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
 
       //! We don't want to have negative water
       _mm_storeu_ps(oW + j, applyMask_ps(_mm_cmplt_ps(_mm_loadu_ps(iL + j), xOceanLvl), xOceanLvl - _mm_loadu_ps(iL + j),
-        _mm_max_ps(_mm_loadu_ps(oW + j) + _mm_loadu_ps(iTw + j) + xRain *_mm_loadu_ps(iR + j) * xTimeStep, x0)));
+        _mm_max_ps(_mm_loadu_ps(oW + j) + xalpha * _mm_loadu_ps(iTw + j) + xRain *_mm_loadu_ps(iR + j) * xTimeStep, x0)));
 
       //! We don't want to have negative sedimentation AND
       //! We don't want to have more sedimentation than landscape
-      _mm_storeu_ps(oC + j, _mm_max_ps(_mm_loadu_ps(oC + j) + _mm_loadu_ps(iTc + j), x0));
+      _mm_storeu_ps(oC + j, _mm_max_ps(_mm_loadu_ps(oC + j) + xalpha * _mm_loadu_ps(iTc + j), x0));
     }
 #endif
     //! Normal version to finish the loop
@@ -342,11 +348,11 @@ void WaterAndSedimentationEvolution::performOneStepEvolution(
         oW[j] = oceanLvl - iL[j];
       }
       else {
-        oW[j] = std::max(oW[j] + iTw[j] + timeStep * rain * iR[j], 0.f);
+        oW[j] = std::max(oW[j] + m_alpha * iTw[j] + timeStep * rain * iR[j], 0.f);
       }
 
       //! We don't want to have negative sedimentation
-      oC[j] = std::max(oC[j] + iTc[j], 0.f);
+      oC[j] = std::max(oC[j] + m_alpha * iTc[j], 0.f);
     }
   }
 }

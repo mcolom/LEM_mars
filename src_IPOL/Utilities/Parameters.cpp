@@ -32,7 +32,7 @@ Parameters::Parameters(
   m_inpName      (NULL),       // Path of the input image            -i  [%s]
   m_outName      (NULL),       // Path of the ouput image            -o  [%s]
   m_verbose      (false),      // Activate the verbose mode          -v
-  m_timeStep     (0.5f),       // Time step                          -t  [%f]
+  m_timeStep     (1.f),        // Time step                          -t  [%f]
   m_rain         (1.f  * 1e-7),// Rain                               -r  [%f]
   m_rainMatrix   (NULL),       // Rain matrix                        -rm [%s]
   m_expM         (0.5f),       // Exp M                              -m  [%f]
@@ -45,7 +45,7 @@ Parameters::Parameters(
   m_oceanLevel   (0.f),        // Ocean level                        -lo [%f]
   m_percLand     (15.f * 1e-2),// Percentage of landscape to remove  -p  [%f]
   m_initWaterLvl (0.f  * 1e-3),// Initial water level                -lw [%f]
-  m_mars_a       (1.f),        // Mars "a" contant                   -ca [%f]
+  m_alpha        (1.f),        // Water divergence efficiency "alpha"-ca [%f]
 #ifdef _OPENMP
   m_nbThreads    (4),          // Number of threads to use           -d  [%d]
 #else
@@ -109,7 +109,7 @@ Parameters::Parameters(
   m_oceanLevel   (i_params.oceanLevel()),
   m_percLand     (i_params.percLand()),
   m_initWaterLvl (i_params.initWaterLvl()),
-  m_mars_a       (i_params.mars_a()),
+  m_alpha        (i_params.alpha()),
   m_nbThreads    (i_params.nbThreads()),
   m_useMultiScale(i_params.useMultiScale()),
   m_boostWater   (i_params.boostWater()),
@@ -299,11 +299,11 @@ int Parameters::checkArgs(
       }
     }
 
-    //! Mars "a" constant
+    //! Water divergence efficiency "alpha"
     if (sarg == "-ca") {
       if (n + 1 < i_argc) {
-        m_mars_a = atof(i_argv[++n]);
-        printf("Using constant a =  %f\n", m_mars_a);
+        m_alpha = atof(i_argv[++n]);
+        printf("Using coefficient alpha =  %f\n", m_alpha);
       }
     }
 
@@ -544,6 +544,7 @@ void Parameters::printSynopsis(
   sentence += " [-lo ocean level]";
   sentence += " [-p landscape percentage]";
   sentence += " [-lw water level init]";
+  sentence += " [-ca Water divergence efficiency 'alpha']";
   sentence += " [-a eta]";
   sentence += " [-d number of threads]";
   sentence += " [-wm activate multiscale]";
@@ -661,7 +662,7 @@ void Parameters::printOptional(
   cout << endl;
 
   //! Time Step
-  this->printWord("-t  (optional)", "0.5", s4);
+  this->printWord("-t  (optional)", "1.0", s4);
   this->printLine("Time step", s7);
 
   //! Rain
@@ -708,6 +709,10 @@ void Parameters::printOptional(
   //! Initial water of level
   this->printWord("-lw (optional)", "0.0", s4);
   this->printLine("Initial water of level (x1e-3)", s7);
+  
+  //! Water divergence efficiency "alpha"
+  this->printWord("-ca (optional)", "1.0", s4);
+  this->printLine("Water divergence efficiency 'alpha'", s7);
 
   //! Eta
   this->printWord("-a  (optional)", "0.01", s4);
@@ -991,10 +996,10 @@ void Parameters::print() const {
   oss12 << m_initWaterLvl;
   this->printWord(" - Init water level:", oss12.str(), s4);
 
-  //! Mars "a" constant
+  //! Water divergence efficiency "alpha"
   ostringstream oss13;
-  oss13 << m_mars_a;
-  this->printWord(" - Mars a constant:", oss13.str(), s4);
+  oss13 << m_alpha;
+  this->printWord(" - alpha:", oss13.str(), s4);
 
   //! Number of threads
   ostringstream oss15;

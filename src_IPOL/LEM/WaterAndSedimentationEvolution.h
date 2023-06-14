@@ -90,7 +90,8 @@ class WaterAndSedimentationEvolution {
     float m_dt;
     float m_rain;
     float* m_rainMatrix;
-
+    float m_alpha;
+    
     //! Size
     size_t m_width;
     size_t m_height;

@@ -953,19 +953,18 @@ void LEM::saveImages() {
   //! Mandatory images
   size_t nbImages = 5;
   imToSave.push_back(new Image(*m_imLandscapeInit));
-  names.push_back(outFolder + "originalLandscape.png");
+  names.push_back(outFolder + "originalLandscape.tif");
   imToSave.push_back(new Image(m_width, m_height,
     m_imWaterLvlInit->channels()));
   names.push_back(outFolder + "initWater.png");
   imToSave.push_back(new Image(*m_imLandscape));
-  //names.push_back(outFolder + "finalLandscape.png");
   names.push_back(outFolder + "finalLandscape.tif"); // miguel
   imToSave.push_back(new Image(m_width, m_height,
     m_imWaterLvl->channels()));
-  names.push_back(outFolder + "finalWater.png");
+  names.push_back(outFolder + "finalWater.tif");
   imToSave.push_back(new Image(m_width, m_height,
     m_imSediment->channels()));
-  names.push_back(outFolder + "finalSediment.png");
+  names.push_back(outFolder + "finalSediment.tif");
   if (doRaw) {
     imToSave.push_back(new Image(*m_imLandscapeRaw));
     names.push_back(outFolder + "rawLandscape.png");
@@ -1035,7 +1034,7 @@ void LEM::saveImages() {
   }
 
   //! Because of the automatic uplift, the highest value of landscape may be > 1
-  const float factor = 255.f / std::max(1.f, maxL);
+  const float factor = 1.f;  // 255.f / std::max(1.f, maxL);
 
   //! Pre-process the images
 #ifdef _OPENMP
