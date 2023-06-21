@@ -956,7 +956,7 @@ void LEM::saveImages() {
   names.push_back(outFolder + "originalLandscape.tif");
   imToSave.push_back(new Image(m_width, m_height,
     m_imWaterLvlInit->channels()));
-  names.push_back(outFolder + "initWater.png");
+  names.push_back(outFolder + "initWater.tif");
   imToSave.push_back(new Image(*m_imLandscape));
   names.push_back(outFolder + "finalLandscape.tif"); // miguel
   imToSave.push_back(new Image(m_width, m_height,
@@ -1050,8 +1050,11 @@ void LEM::saveImages() {
 
   //! Second, the original water level
   m_imWaterLvlInit->applySqrtNormalization(*imToSave[1], tid, 0, 255, minI,
-    maxI);
-
+    maxI);    
+//  m_imWaterLvlInit->*imToSave[1];
+//  imToSave[1]->multiply(factor, tid);
+//  m_imWaterLvlInit->multiply(factor, *imToSave[1] );
+    
   //! Third, the final landscape
   imToSave[2]->multiply(factor, tid);
 

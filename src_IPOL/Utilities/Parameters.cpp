@@ -216,7 +216,7 @@ int Parameters::checkArgs(
     //! Rain
     if (sarg == "-r") {
       if (n + 1 < i_argc) {
-        m_rain = atof(i_argv[++n]) * 1.0e-7;
+        m_rain = atof(i_argv[++n]);
       }
     }
 
@@ -253,14 +253,14 @@ int Parameters::checkArgs(
     //! Creep
     if (sarg == "-c") {
       if (n + 1 < i_argc) {
-        m_creep = atof(i_argv[++n]) * 1e-3;
+        m_creep = atof(i_argv[++n]);
       }
     }
 
     //! Erosion S
     if (sarg == "-s") {
       if (n + 1 < i_argc) {
-        m_s = atof(i_argv[++n]) * 1e-6;
+        m_s = atof(i_argv[++n]);
       }
     }
 
@@ -295,7 +295,7 @@ int Parameters::checkArgs(
     //! Initialization of the water level
     if (sarg == "-lw") {
       if (n + 1 < i_argc) {
-        m_initWaterLvl = atof(i_argv[++n]) * 1e-3;
+        m_initWaterLvl = atof(i_argv[++n]);
       }
     }
 
@@ -424,7 +424,7 @@ int Parameters::checkArgs(
     //! Rain for the water only
     if (sarg == "-rw") {
       if (n + 1 < i_argc) {
-        m_rainWater = atof(i_argv[++n]) * 1.0e-7;
+        m_rainWater = atof(i_argv[++n]);
       }
     }
 
@@ -668,7 +668,7 @@ void Parameters::printOptional(
   //! Rain
   this->printWord("-r  (optional)", "1.0", s4);
   this->printLine("Rain parameter for the hole filling and water "\
-    "initialization (x1e-7)", s7);
+    "initialization", s7);
 
   //! Exp M
   this->printWord("-m  (optional)", "0.5", s4);
@@ -684,11 +684,11 @@ void Parameters::printOptional(
 
   //! Erosion creep
   this->printWord("-c  (optional)", "1.0", s4);
-  this->printLine("Erosion creep (x1e-3)", s7);
+  this->printLine("Erosion creep", s7);
 
   //! Erosion S
   this->printWord("-s  (optional)", "0.0", s4);
-  this->printLine("Erosion S (x1e-6)", s7);
+  this->printLine("Erosion S", s7);
 
   //! Maximal number of iterations
   this->printWord("-ni (optional)", "1000", s4);
@@ -708,7 +708,7 @@ void Parameters::printOptional(
 
   //! Initial water of level
   this->printWord("-lw (optional)", "0.0", s4);
-  this->printLine("Initial water of level (x1e-3)", s7);
+  this->printLine("Initial water of level", s7);
   
   //! Water divergence efficiency "alpha"
   this->printWord("-ca (optional)", "1.0", s4);
@@ -808,7 +808,7 @@ void Parameters::printOptional(
 
   //! Rain for water only
   this->printWord("-rw (optional)", "1.0", s4);
-  this->printLine("Rain for the water only option, (x1e-7).", s7);
+  this->printLine("Rain for the water only option.", s7);
 
   //! Border conditions for water
   this->printWord("-cw (optional)", "0", s4);
