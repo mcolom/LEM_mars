@@ -1002,12 +1002,12 @@ void LEM::saveImages() {
     m_imLandscapeInit->getTopo(im, *m_imWaterLvlInit, m_params->oceanLevel(),
       0, 1, m_params->visualizeTopo(), m_params->waterColor());      
     imToSave.push_back(new Image(im));
-    names.push_back(outFolder + "originalLandscape_topo.tif");
+    names.push_back(outFolder + "originalLandscape_topo.png");
     indTopoO = imToSave.size() - 1;
     m_imLandscape->getTopo(im, *m_imWaterLvl, m_params->oceanLevel(), 0, 1,
       m_params->visualizeTopo(), m_params->waterColor());
     imToSave.push_back(new Image(im));
-    names.push_back(outFolder + "finalLandscape_topo.tif");
+    names.push_back(outFolder + "finalLandscape_topo.png");
     indTopoF = imToSave.size() - 1;
     if (doRaw) {
       nbImages++;
@@ -1015,7 +1015,7 @@ void LEM::saveImages() {
       m_imLandscapeRaw->getTopo(im, imWater, m_params->oceanLevel(), 0, 1,
         m_params->visualizeTopo(), m_params->waterColor());
       imToSave.push_back(new Image(im));
-      names.push_back(outFolder + "rawLandscape_topo.tif");
+      names.push_back(outFolder + "rawLandscape_topo.png");
     }
   }
 
@@ -1041,19 +1041,19 @@ void LEM::saveImages() {
   const float factor = 1.f;  // 255.f / std::max(1.f, maxL);
 
   //! Pre-process the images
-#ifdef _OPENMP
-#pragma omp parallel
-{
-  const size_t tid = omp_get_thread_num();
-#else
-  const size_t tid = 0;
-#endif // _OPENMP
+//#ifdef _OPENMP
+//#pragma omp parallel
+//{
+// const size_t tid = omp_get_thread_num();
+//#else
+//  const size_t tid = 0;
+//#endif // _OPENMP
 
   //! First, the original landscape
   imToSave[0]->multiply(factor, tid);
 
   //! Second, the original water level
-  m_imWaterLvlInit->applySqrtNormalization(*imToSave[1], tid, 0, 1, minI,
+  m_imWaterLvlInit->applySqrtNormalization(*imToSave[1], tid, minI, maxI, minI,
     maxI);    
 //  m_imWaterLvlInit->*imToSave[1];
 //  imToSave[1]->multiply(factor, tid);
@@ -1063,12 +1063,13 @@ void LEM::saveImages() {
   imToSave[2]->multiply(factor, tid);
 
   //! Fourth, the final water level
-  m_imWaterLvl->applySqrtNormalization(*imToSave[3], tid, 0, 1, minW,
+  m_imWaterLvl->applySqrtNormalization(*imToSave[3], tid, minW, maxW, minW,
     maxW);
 
+
   //! Fifth, the final water times concentration
-  m_imSediment->applySqrtNormalization(*imToSave[4], tid, 0,
-    1, minC, maxC);
+  m_imSediment->applySqrtNormalization(*imToSave[4], tid, minC,
+    maxC, minC, maxC);
 
   //! Sixth, the raw landscape
   if (doRaw) {
@@ -1085,8 +1086,8 @@ void LEM::saveImages() {
 
   //! If twi wanted
   if (m_params->computeTWI()) {
-    imTwiO.applySqrtNormalization(*imToSave[indTwiO], tid, 0, 1, minTwiO, maxTwiO);
-    imTwiF.applySqrtNormalization(*imToSave[indTwiF], tid, 0, 1, minTwiF, maxTwiF);
+    imTwiO.applySqrtNormalization(*imToSave[indTwiO], tid, minTwiO, maxTwiO, minTwiO, maxTwiO);
+    imTwiF.applySqrtNormalization(*imToSave[indTwiF], tid, minTwiF, maxTwiF, minTwiF, maxTwiF);
   }
 
 #ifdef _OPENMP
