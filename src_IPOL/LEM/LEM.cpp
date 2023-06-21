@@ -912,7 +912,6 @@ void LEM::integrateWaterOverOceanLevel(
   o_norm = sqrt(o_norm / nb);
 }
 
-
 //! Save images after the main evolution.
 void LEM::saveImages() {
 
@@ -958,7 +957,7 @@ void LEM::saveImages() {
     m_imWaterLvlInit->channels()));
   names.push_back(outFolder + "initWater.tif");
   imToSave.push_back(new Image(*m_imLandscape));
-  names.push_back(outFolder + "finalLandscape.tif"); // miguel
+  names.push_back(outFolder + "finalLandscape.tif");
   imToSave.push_back(new Image(m_width, m_height,
     m_imWaterLvl->channels()));
   names.push_back(outFolder + "finalWater.tif");
@@ -967,7 +966,7 @@ void LEM::saveImages() {
   names.push_back(outFolder + "finalSediment.tif");
   if (doRaw) {
     imToSave.push_back(new Image(*m_imLandscapeRaw));
-    names.push_back(outFolder + "rawLandscape.png");
+    names.push_back(outFolder + "rawLandscape.tif");
     nbImages++;
   }
 
@@ -978,32 +977,37 @@ void LEM::saveImages() {
     TWI twi;
     nbImages += 2;
     imToSave.push_back(new Image(m_width, m_height, 1));
-    names.push_back(outFolder + "originalLandscape_twi.png");
+    names.push_back(outFolder + "originalLandscape_twi.tif");
     indTwiO = imToSave.size() - 1;
     twi.computeTWI(*m_imLandscapeInit, imTwiO);
     imTwiO.getStats(minTwiO, maxTwiO, mean);
 
     imToSave.push_back(new Image(m_width, m_height, 1));
-    names.push_back(outFolder + "finalLandscape_twi.png");
+    names.push_back(outFolder + "finalLandscape_twi.tif");
     indTwiF = imToSave.size() - 1;
     twi.computeTWI(*m_imLandscape, imTwiF);
     imTwiF.getStats(minTwiF, maxTwiF, mean);
   }
 
   //! If topography wanted
+#ifdef _OPENMP
+    const size_t tid = omp_get_thread_num();
+#else
+    const size_t tid = 0;
+#endif
+
   size_t indTopoO = 0, indTopoF = 0;
   if (m_params->visualizeTopo() != NULL) {
     nbImages += 2;
     m_imLandscapeInit->getTopo(im, *m_imWaterLvlInit, m_params->oceanLevel(),
-      0, 1, m_params->visualizeTopo(), m_params->waterColor());
+      0, 1, m_params->visualizeTopo(), m_params->waterColor());      
     imToSave.push_back(new Image(im));
-    names.push_back(outFolder + "originalLandscape_topo.png");
+    names.push_back(outFolder + "originalLandscape_topo.tif");
     indTopoO = imToSave.size() - 1;
-
     m_imLandscape->getTopo(im, *m_imWaterLvl, m_params->oceanLevel(), 0, 1,
       m_params->visualizeTopo(), m_params->waterColor());
     imToSave.push_back(new Image(im));
-    names.push_back(outFolder + "finalLandscape_topo.png");
+    names.push_back(outFolder + "finalLandscape_topo.tif");
     indTopoF = imToSave.size() - 1;
     if (doRaw) {
       nbImages++;
@@ -1011,7 +1015,7 @@ void LEM::saveImages() {
       m_imLandscapeRaw->getTopo(im, imWater, m_params->oceanLevel(), 0, 1,
         m_params->visualizeTopo(), m_params->waterColor());
       imToSave.push_back(new Image(im));
-      names.push_back(outFolder + "rawLandscape_topo.png");
+      names.push_back(outFolder + "rawLandscape_topo.tif");
     }
   }
 
@@ -1049,7 +1053,7 @@ void LEM::saveImages() {
   imToSave[0]->multiply(factor, tid);
 
   //! Second, the original water level
-  m_imWaterLvlInit->applySqrtNormalization(*imToSave[1], tid, 0, 255, minI,
+  m_imWaterLvlInit->applySqrtNormalization(*imToSave[1], tid, 0, 1, minI,
     maxI);    
 //  m_imWaterLvlInit->*imToSave[1];
 //  imToSave[1]->multiply(factor, tid);
@@ -1059,12 +1063,12 @@ void LEM::saveImages() {
   imToSave[2]->multiply(factor, tid);
 
   //! Fourth, the final water level
-  m_imWaterLvl->applySqrtNormalization(*imToSave[3], tid, 0, 255, minW,
+  m_imWaterLvl->applySqrtNormalization(*imToSave[3], tid, 0, 1, minW,
     maxW);
 
   //! Fifth, the final water times concentration
   m_imSediment->applySqrtNormalization(*imToSave[4], tid, 0,
-    255, minC, maxC);
+    1, minC, maxC);
 
   //! Sixth, the raw landscape
   if (doRaw) {
@@ -1074,15 +1078,15 @@ void LEM::saveImages() {
   //! If meshes wanted
   if (m_params->visualizeMesh()) {
     m_imLandscapeInit ->sample(*imToSave[indMeshO], nbPoints, tid);
-    imToSave[indMeshO]->multiply(255, tid);
+    imToSave[indMeshO]->multiply(1, tid);
     m_imLandscape     ->sample(*imToSave[indMeshF], nbPoints, tid);
-    imToSave[indMeshF]->multiply(255, tid);
+    imToSave[indMeshF]->multiply(1, tid);
   }
 
   //! If twi wanted
   if (m_params->computeTWI()) {
-    imTwiO.applySqrtNormalization(*imToSave[indTwiO], tid, 0, 255, minTwiO, maxTwiO);
-    imTwiF.applySqrtNormalization(*imToSave[indTwiF], tid, 0, 255, minTwiF, maxTwiF);
+    imTwiO.applySqrtNormalization(*imToSave[indTwiO], tid, 0, 1, minTwiO, maxTwiO);
+    imTwiF.applySqrtNormalization(*imToSave[indTwiF], tid, 0, 1, minTwiF, maxTwiF);
   }
 
 #ifdef _OPENMP

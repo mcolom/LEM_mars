@@ -542,6 +542,10 @@ void Image::writeTiff(
   const std::string &p_name,
   const bool p_quad) const {
 
+  float im_min, im_max, im_mean;
+  this->getStats(im_min, im_max, im_mean);
+  printf("Saving %s (min=%.2f, max=%.2f, mean=%.2f)\n", p_name.c_str(), im_min, im_max, im_mean);
+
   //! Open the file
   TIFF *tif = TIFFOpen(p_name.c_str(), "w");
 
