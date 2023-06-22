@@ -990,20 +990,15 @@ void LEM::saveImages() {
   }
 
   //! If topography wanted
-#ifdef _OPENMP
-    const size_t tid = omp_get_thread_num();
-#else
-    const size_t tid = 0;
-#endif
-
   size_t indTopoO = 0, indTopoF = 0;
   if (m_params->visualizeTopo() != NULL) {
     nbImages += 2;
     m_imLandscapeInit->getTopo(im, *m_imWaterLvlInit, m_params->oceanLevel(),
-      0, 1, m_params->visualizeTopo(), m_params->waterColor());      
+      0, 1, m_params->visualizeTopo(), m_params->waterColor());
     imToSave.push_back(new Image(im));
     names.push_back(outFolder + "originalLandscape_topo.png");
     indTopoO = imToSave.size() - 1;
+
     m_imLandscape->getTopo(im, *m_imWaterLvl, m_params->oceanLevel(), 0, 1,
       m_params->visualizeTopo(), m_params->waterColor());
     imToSave.push_back(new Image(im));
@@ -1041,13 +1036,13 @@ void LEM::saveImages() {
   const float factor = 1.f;  // 255.f / std::max(1.f, maxL);
 
   //! Pre-process the images
-//#ifdef _OPENMP
-//#pragma omp parallel
-//{
-// const size_t tid = omp_get_thread_num();
-//#else
-//  const size_t tid = 0;
-//#endif // _OPENMP
+#ifdef _OPENMP
+#pragma omp parallel
+{
+  const size_t tid = omp_get_thread_num();
+#else
+  const size_t tid = 0;
+#endif // _OPENMP
 
   //! First, the original landscape
   imToSave[0]->multiply(factor, tid);

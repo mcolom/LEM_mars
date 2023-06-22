@@ -4,7 +4,6 @@ lem_bin
 *.txt
 *.png
 *.tif
-*.gpl
 *.swp
 *.o
 
