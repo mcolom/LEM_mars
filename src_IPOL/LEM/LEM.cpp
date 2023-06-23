@@ -328,7 +328,7 @@ void LEM::init(
   m_evolutionWaterAndSedimentation = new WaterAndSedimentationEvolution();
   m_evolutionWater                ->init(m_width, m_height, m_border, p_params);
   
-  // [Miguel] Print sizes
+  // Print sizes
   printf("m_imLandscape: %d x %d\n", m_imLandscape->width(), m_imLandscape->height());
 
   //! Add the images to save
@@ -432,10 +432,19 @@ void LEM::runMainIterations() {
   this->runMainIterationsCore();
 }
 
+bool file_exists(const char *filename) {
+    FILE *fp = NULL;
+    if (NULL != (fp = fopen(filename, "rb"))) {
+      fclose(fp);
+      return true;
+    }
+    return false;
+}
 
 //! Perform the main iteration after the water initialization.
 void LEM::runMainIterationsCore() {
-
+  printf("runMainIterationsCore() *****************************\n");
+    
   //! For convenience
   const bool verbose       = m_params->verbose();
   const bool addNoise      = m_params->addNoise() > 0.f;
@@ -467,6 +476,23 @@ void LEM::runMainIterationsCore() {
       oL[j] = iL[j];
       oW[j] = iW[j];
       oC[j] = 0.f;
+    }
+  }
+
+  bool debug_load_images = true;
+
+  // DEBUG: load m_imWaterLvl and m_imSediment from TIFF images
+  // m_imSediment, m_imWaterLvl
+  if (debug_load_images) {
+    const char *debug_water_filename = "debug_water.tif";
+    if (file_exists(debug_water_filename)) {
+      printf("*** WARNING ***: loading %s\n", debug_water_filename);
+      m_imWaterLvl->read(debug_water_filename, borderWater);
+    }
+    const char *debug_sediment_filename = "debug_sediment.tif";
+    if (file_exists(debug_sediment_filename)) {
+      printf("*** WARNING ***: loading %s\n", debug_sediment_filename);
+      m_imSediment->read(debug_sediment_filename, borderWater);
     }
   }
 
